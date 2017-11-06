@@ -2659,24 +2659,25 @@ int DedupCore::restoreShareFile(const int &userID, const std::string &fullFileNa
 			}
 			cout<<"second the total size has sent "<<totalSendSize<<endl;
 
-			/*send the data of the share file buffer through the socket with socketFD*/
-			// if ((sentSize = send(socketFD, shareFileBuffer, shareFileBufferOffset, 0)) != shareFileBufferOffset){
-			// 	fprintf(stderr, "Error: fail to send the data of the share file buffer (totally in %d bytes) \
-			// 			through the socket %d --- return %ld!\n", shareFileBufferOffset, socketFD, sentSize);
+/* 			send the data of the share file buffer through the socket with socketFD
+			 if ((sentSize = send(socketFD, shareFileBuffer, shareFileBufferOffset, 0)) != shareFileBufferOffset){
+			 	fprintf(stderr, "Error: fail to send the data of the share file buffer (totally in %d bytes) \
+			 			through the socket %d --- return %ld!\n", shareFileBufferOffset, socketFD, sentSize);
 
-			// 	if (!recipeFileIsInBuffer) {
-			// 		fclose(recipeFilePointer);
-			// 	}
+			 	if (!recipeFileIsInBuffer) {
+			 		fclose(recipeFilePointer);
+			 	}
 
-			// 	free(recipeFileBuffer);
-			// 	free(shareFileBuffer);
-			// 	free(shareContainerCache);
-			// 	free(shareContainerCacheIndex); 
+			 	free(recipeFileBuffer);
+			 	free(shareFileBuffer);
+			 	free(shareContainerCache);
+			 	free(shareContainerCacheIndex); 
 
-			// 	delete inodeKeySlice;
+			 	delete inodeKeySlice;
 
-			// 	return 0;	
-			// }
+			 	return 0;	
+			 } 
+*/
 
 		}
 		cout <<  shareFileBufferOffset << " "<< sentSize << endl;
@@ -2721,6 +2722,6 @@ int DedupCore::restoreShareFile(const int &userID, const std::string &fullFileNa
 
 	delete inodeKeySlice;
 
-	return sentSize;
+	return 1;
 }
 

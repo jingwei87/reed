@@ -281,7 +281,7 @@ int main(int argc, char *argv[]){
 		downloaderObj = new Downloader(n,n,userID,decoderObj,confObj);
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
 		keyObj->downloadFile(userID, argv[1], namesize);
-		double timer, split; //bw;
+		double timer; //bw;
 		string downloadPath(argv[1]);
 		downloadPath += ".d";
 		FILE * fw = fopen(downloadPath.c_str(),"wb");

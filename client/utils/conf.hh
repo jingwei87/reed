@@ -88,8 +88,13 @@ class Configuration {
 			inline serverConf getServerConf(int index) {
 			
 				if (index > numOfStore_ + 1) {
-			
+					
+					serverConf temp;
+					temp.serverIP = "0";
+					temp.dataStorePort = 0;
+					temp.keyStorePort = 0;
 					cerr<<"index overflow numOfStore"<<endl;
+					return temp;
 				}
 				else {
 					

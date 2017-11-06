@@ -308,9 +308,8 @@ void* SocketHandler(void* lp){
 			std::string fullFileName;
 			fullFileName.assign(buffer, count);
 			cout<<"full file name = "<<fullFileName<<endl;
-			int temp;
-			if (temp = dedupObj_->restoreShareFile(user, fullFileName, 0, *clientSock, hashObj)) {
-				cout<<"download success & done:" << temp <<endl;
+			if (dedupObj_->restoreShareFile(user, fullFileName, 0, *clientSock, hashObj)) {
+				cout<<"download success & done" <<endl;
 			}
 			else {
 				cout<<"an err in dudupcore"<<endl;
@@ -355,13 +354,12 @@ void* SocketHandlerKey(void* lp){
 	memset(statusList,0,sizeof(bool)*BUFFER_LEN);
 	int user = 0;
 
-
 	//get user ID
 	if ((bytecount = recv(*clientSock, buffer, sizeof(int), 0)) == -1){
 		fprintf(stderr, "Error recv userID %d\n",errno);
 	}
 	user= ntohl(*(int*)buffer);
-
+	cout<<"get connection from user : "<<user<<endl;
 	memset(buffer, 0, BUFFER_LEN);
 
 	//initialize hash object
