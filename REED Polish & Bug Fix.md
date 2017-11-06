@@ -1,7 +1,7 @@
 # REED Polish & Bug Fix
 - based on https://github.com/chintran27/Reed/ - last commit 
 
-## Fixed bugs 
+## 已修复的bug
 
 1. client main.cc line 63-66: 必须能够打开要下载的文件才可以下载(参数1为文件路径，在main中不判断操作类型就强制打开。
 2. client main.cc  line 82: 按注释解读为从conf file中获取配置参数，实际上配置全部写在conf.hh中，导致修改配置后必须重新编译。
@@ -12,23 +12,24 @@
 7. client download.cc line 235: downloadstub方法中下载好stub文件后未输出到文件直接清空了下载内容。
 8. client makefile : cpabe临时文件未clean
 9. server makefile : 需手动创建对应文件夹
-10. client chunker.hh : defined chunker VAR_SIZE_TYPE, but not implement
-11. client/socket -> genericDownload method err, could not recv a big file (bigger than buffer) 
-12. client/socket -> downloadChunk method err, err sending download request  
-13. server/dedupCore -> indic num type err, sending indic & data length err 
-14. client/socket -> downloadChunk method get stub's data (errr recv)
-15. client/download -> multithread err while download chunks with client/socket/downloadChunk
+10. client chunker.hh : 定义了VAR_SIZE_TYPE的chunking, 但没有具体实现。
+11. client/socket ：genericDownload 写法问题，超过64KB SocketBuffer大小限制的文件无法下载。
+12. client/socket ： downloadChunk 写法问题，发送的下载请求信息不正确，导致无法下载。
+13. server/dedupCore ：  indicate 标志符宏定义与client端协定不一致，导致判断请求类型错误。
+14. client/socket ： download Stub错误，没有保存stub文件就将stubbuffer清空，导致还原文件错误。
+
+
+## 尚未添加的功能
+
+1. client/ssl ： 实现代码存在问题，且系统没有使用该模块，数据传输全部使用明文。
+2. client/decoder ：上传至keystore中的stub文件其实是meta文件（未加密的stub文件），同时下载stub文件后，没有相应的解密过程。
+3. client ： rekeying有实现，但是无法正常使用，且与paper不完全一致。
+4. server ： 将每个chunk的密钥与chunk合并存储，client上传的cipher文件（cpabe加密后的密钥文件）没有被使用。
+5. client ：没有实现多线程key的上传下载功能，仅支持单一keystore。
+6. client下载server中不存在的文件时，程序异常退出，没有相应处理。
 
 
 
-## Features need add
 
-1. client/ssl -> not used in data send/recv
-2. client/decoder -> stub file get from ".meta" file (not encrypted)
-3. client -> rekeying function not add
-4. server -> download and store keys by .cipher file
-5. client -> multithread keymanager
-6. client -> multithread key upload and download
-7. client -> retrieve file by download cipher file (now: download key with chunks)
 
 
