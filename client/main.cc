@@ -57,12 +57,16 @@ void usage() {
 	cout<<"usage: ./CLIENT [filename] [userID] [action] [secutiyType]"<<endl;
 	cout<<setw(4)<<"- [filename]: full path of the file;"<<endl;
 	cout<<setw(4)<<"- [userID]: use ID of current client;"<<endl;
-	cout<<setw(4)<<"- [action]: [-u] upload; [-d] download;"<<endl;
+	cout<<setw(4)<<"- [action]: [-u] upload; [-d] download; [-r] rekeying;"<<endl;
 	cout<<setw(4)<<"- [securityType]: [HIGH] AES-256 & SHA-256; [LOW] AES-128 & SHA-1"<<endl;
 	exit(1);
 }
 
-int main(int argc, char *argv[]){
+void cpabeKeyGen(string polic) {
+
+	string 
+}
+int main(int argc, char *argv[]) {
 	/* argument check */
 	if (argc != 5) {
 		

@@ -216,7 +216,6 @@ void* KeyEx::threadHandlerMin(void* param){
 			itemCount ++;
 			sizeCount += temp.chunkSize;
 
-
 			if (obj->segType_ == VAR_SEG && (memcmp(hash_tmp+(HASH_SIZE-9), mask, 9) == 0 && sizeCount > KEY_BATCH_SIZE_MIN)) 
 				break;
 			if (temp.end == 1) 
@@ -280,9 +279,11 @@ KeyEx::KeyEx(Encoder* obj, int securetype, string kmip, int kmport, serverConf s
 	sock_[0] = new Ssl((char*)kmip.c_str(), kmport, 0);
 	//	create key generation thread 
 	if (charaType_ == CHARA_CACHE) {
+
 		pthread_create(&tid_,0,&threadHandler,(void*)temp);
 	}
 	else {
+		
 		pthread_create(&tid_,0,&threadHandlerMin,(void*)temp);		
 	}
 	
@@ -676,11 +677,11 @@ void KeyEx::newFile(int user, char* filePath, int pathSize) {
 
 
 void KeyEx::downloadFile(int user, char* filePath, int pathSize) {
+	
 	BIGNUM *s = BN_new();
 	BN_pseudo_rand(s, 256, -1, 0);
 	//send indicator
 	int indicator = DOWNLOAD_KEY;
 	Socket *sock = new Socket(ksip_, ksport_, user);
 	sock->genericSend((char*)&indicator, sizeof(int));
-
 }
