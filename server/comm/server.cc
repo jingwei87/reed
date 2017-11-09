@@ -410,8 +410,13 @@ void* SocketHandlerKey(void* lp){
 			int ciphersize = *(int*)buffer;
 
 			/* recv cipher */
-			if((bytecount = recv(*clientSock, buffer, ciphersize, 0)) == -1){
-				fprintf(stderr, "Error receiving data %d\n", errno);
+			int total = 0;
+			while (total < ciphersize) {
+				
+				if((bytecount = recv(*clientSock, buffer+total, ciphersize-total, 0)) == -1){
+					fprintf(stderr, "Error receiving data %d\n", errno);
+				}
+				total+=bytecount;
 			}
 
 			fwrite(buffer, 1, ciphersize, fp);
@@ -425,10 +430,14 @@ void* SocketHandlerKey(void* lp){
 			int metasize = *(int*)buffer;
 
 			/* recv meta */
-			if((bytecount = recv(*clientSock, buffer, metasize, 0)) == -1){
-				fprintf(stderr, "Error receiving data %d\n", errno);
+			total = 0;
+			while (total < metasize) {
+				
+				if((bytecount = recv(*clientSock, buffer+total, metasize-total, 0)) == -1){
+					fprintf(stderr, "Error receiving data %d\n", errno);
+				}
+				total+=bytecount;
 			}
-
 			sprintf(name, "keystore/%s.meta", namebuffer);
 
 			fp = fopen(name, "w");
@@ -511,9 +520,14 @@ void* SocketHandlerKey(void* lp){
 				fprintf(stderr, "Error receiving data %d\n", errno);
 			}
 			int ciphersize = *(int*)buffer;
-			if ((bytecount = recv(*clientSock, buffer, ciphersize, 0)) == -1) {
-
-				fprintf(stderr, "Error receiving data %d\n", errno);
+			int total = 0;
+			while (total < length) {
+				
+				if ((bytecount = recv(*clientSock, buffer+total, ciphersize-total, 0)) == -1) {
+	
+					fprintf(stderr, "Error receiving data %d\n", errno);
+				}
+				total+=bytecount;
 			}
 			fwrite(buffer, 1, ciphersize, fp);
 			fclose(fp);
@@ -523,9 +537,14 @@ void* SocketHandlerKey(void* lp){
 				fprintf(stderr, "Error receiving data %d\n", errno);
 			}
 			int metasize = *(int*)buffer;
-			if ((bytecount = recv(*clientSock, buffer, metasize, 0)) == -1) {
-
-				fprintf(stderr, "Error receiving data %d\n", errno);
+			total = 0;
+			while (total < length) {
+				
+				if ((bytecount = recv(*clientSock, buffer+total, metasize-total, 0)) == -1) {
+	
+					fprintf(stderr, "Error receiving data %d\n", errno);
+				}
+				total+=bytecount;
 			}
 			sprintf(name, "keystore/%s.meta", namebuffer);
 			fp = fopen(name, "w");

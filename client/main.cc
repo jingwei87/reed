@@ -64,7 +64,6 @@ void usage() {
 
 void cpabeKeyGen(string polic) {
 
-	string 
 }
 int main(int argc, char *argv[]) {
 	/* argument check */
@@ -270,7 +269,7 @@ int main(int argc, char *argv[]) {
 		delete encoderObj;
 		inputFile.close();
 		char cmd_1[256];
-		sprintf(cmd_1, "rm -rf %s.stub", argv[1]);
+		// sprintf(cmd_1, "rm -rf %s.stub", argv[1]);
 		char cmd_2[256];
 		sprintf(cmd_2, "rm -rf %s.meta", argv[1]);
 		system(cmd_1);
@@ -316,17 +315,23 @@ int main(int argc, char *argv[]) {
 
 
 	if (strncmp(opt,"-r",2) == 0){
+		// cout << "Please Input Password" <<endl;
+		// string pswd;
+		// cin >> pswd;
 		double timer,split,bw;
 		timerStart(&timer);
 		uploaderObj = new Uploader(n,n,userID,confObj);
 		encoderObj = new Encoder(n, securetype, uploaderObj);
+		
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0),CHARA_MIN_HASH,VAR_SEG);
 		keyObj->readKeyFile("./keys/public.pem");
 
 		keyObj->updateFile(userID, argv[1], namesize);
+
 		split = timerSplit(&timer);
 		bw = readInFileSize/1024/1024/split;
 		printf("%lf\t%lf\n", bw, split);
+		cout << "this is a flag for debug rekeying" <<endl;
 	}
 	free(buffer);
 	free(chunkEndIndexList);

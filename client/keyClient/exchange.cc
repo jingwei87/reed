@@ -460,7 +460,6 @@ void KeyEx::createTable() {
 void KeyEx::updateFile(int user, char* filePath, int pathSize) {
 
 	int indicator = KEY_UPDATE;
-
 	Socket *sock = new Socket(ksip_, ksport_, user);
 	// 	SEND 1: (4 byte) state update indicator
 	sock->genericSend((char*)&indicator, sizeof(int));
@@ -510,7 +509,7 @@ void KeyEx::updateFile(int user, char* filePath, int pathSize) {
 	// download meta
 	char* meta = (char*)malloc(sizeof(char)*length);
 	sock->genericDownload(meta, length);
-
+	
 	int ver;
 	int id;
 	BIGNUM *e = BN_new();
@@ -582,6 +581,7 @@ void KeyEx::updateFile(int user, char* filePath, int pathSize) {
 	char name[256];
 	sprintf(name, "%s.stub", filePath);
 	fp = fopen(name, "r");
+	
 	fseek(fp, 0, SEEK_END);
 	length = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
@@ -595,6 +595,7 @@ void KeyEx::updateFile(int user, char* filePath, int pathSize) {
 	cryptoObj_->encryptWithKey(v2, length, new_key, v1);
 	// write new stub
 	fp = fopen(name, "w");
+	
 	fwrite(v1, length, 1, fp);
 	fclose(fp);
 	delete(sock);
