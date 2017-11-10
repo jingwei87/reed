@@ -246,5 +246,7 @@ class KeyEx{
 
 		void downloadFile(int user, char* filePath, int pathSize);
 
+		void updateFileByPolicy(int user, char* filePath, int pathSize, char* PolicyPath);
+
 };
 #endif

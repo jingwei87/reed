@@ -61,10 +61,6 @@ void usage() {
 	cout<<setw(4)<<"- [securityType]: [HIGH] AES-256 & SHA-256; [LOW] AES-128 & SHA-1"<<endl;
 	exit(1);
 }
-
-void cpabeKeyGen(string polic) {
-
-}
 int main(int argc, char *argv[]) {
 	/* argument check */
 	if (argc != 5) {
@@ -308,16 +304,17 @@ int main(int argc, char *argv[]) {
 		delete downloaderObj;
 		delete decoderObj;
 		char cmd[256];
-		sprintf(cmd, "rm -rf %s.stub.d", argv[1]);
+		// sprintf(cmd, "rm -rf %s.stub.d", argv[1]);
 		system(cmd);
 	}
 	cout<<"temp file clean up, download end"<<endl;
 
 
 	if (strncmp(opt,"-r",2) == 0){
-		// cout << "Please Input Password" <<endl;
-		// string pswd;
-		// cin >> pswd;
+		cout << "Please Input The PolicyPath" <<endl;
+		char *PolicyPath =  (char*)malloc(sizeof(char)*256);
+		scanf("%s",PolicyPath);
+		cout << "this is a flag for debug rekeying" <<endl;
 		double timer,split,bw;
 		timerStart(&timer);
 		uploaderObj = new Uploader(n,n,userID,confObj);
@@ -325,13 +322,12 @@ int main(int argc, char *argv[]) {
 		
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0),CHARA_MIN_HASH,VAR_SEG);
 		keyObj->readKeyFile("./keys/public.pem");
-
-		keyObj->updateFile(userID, argv[1], namesize);
+		
+		keyObj->updateFileByPolicy(userID, argv[1], namesize, PolicyPath);
 
 		split = timerSplit(&timer);
 		bw = readInFileSize/1024/1024/split;
 		printf("%lf\t%lf\n", bw, split);
-		cout << "this is a flag for debug rekeying" <<endl;
 	}
 	free(buffer);
 	free(chunkEndIndexList);
