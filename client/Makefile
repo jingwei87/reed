@@ -18,3 +18,4 @@ clean:
 	@rm -rf cache.db
 	@rm -rf decoded_copy
 	@rm -rf temp_cpabe.cpabe
+	@rm -rf keys/pk/*

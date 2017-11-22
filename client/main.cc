@@ -170,6 +170,7 @@ int main(int argc, char *argv[]) {
 		uploaderObj = new Uploader(n,n,userID, confObj);
 		encoderObj = new Encoder(n, securetype, uploaderObj);
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
+		keyObj ->cpabeKeygen(userID);
 		keyObj->readKeyFile("./keys/public.pem");
 		keyObj->newFile(userID, argv[1], namesize);
 

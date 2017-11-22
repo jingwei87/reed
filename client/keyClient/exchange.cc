@@ -488,7 +488,7 @@ void KeyEx::updateFile(int user, char* filePath, int pathSize) {
 	free(cipher);
 	// 	dec the cipher with private secret
 	char cmd[MAX_CMD_LENGTH];
-	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk cipher.cpabe");
+	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk/pk_%d cipher.cpabe",user);
 	system(cmd);
 	// read cipher
 	fp = fopen("cipher","r");
@@ -708,7 +708,7 @@ void KeyEx::downloadFile(int user, char* filePath, int pathSize) {
 	free(cipher);
 	// 	dec the cipher with private secret
 	char cmd[MAX_CMD_LENGTH];
-	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk cipher.cpabe");
+	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk/pk_%d cipher.cpabe",user);
 	system(cmd);
 	// read cipher
 	fp = fopen("cipher","r");
@@ -793,7 +793,7 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char* Pol
 	free(cipher);
 	// 	dec the cipher with private secret
 	char cmd[MAX_CMD_LENGTH];
-	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk cipher.cpabe");
+	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk/pk_%d cipher.cpabe",user);
 	system(cmd);
 	// read cipher
 	fp = fopen("cipher","r");
@@ -911,6 +911,6 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char* Pol
 
 void KeyEx::cpabeKeygen(int userID){
 	char cmd[256];
-	snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/pk keys/pub_key keys/master_key 'id = %d'",userID);
+	snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/pk/pk_%d keys/pub_key keys/master_key 'id = %d'",userID,userID);
 	system(cmd);
 }
