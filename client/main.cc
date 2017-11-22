@@ -308,6 +308,9 @@ int main(int argc, char *argv[]) {
 		char cmd[256];
 		sprintf(cmd, "rm -rf %s.stub.d", argv[1]);
 		system(cmd);
+		char cmd[256];
+		sprintf(cmd, "rm -rf cipher");
+		system(cmd);	
 	}
 	cout<<"temp file clean up, download end"<<endl;
 
@@ -346,6 +349,9 @@ int main(int argc, char *argv[]) {
 
 	char cmd[256];
 	sprintf(cmd, "rm -rf temp_cpabe.cpabe");
-	system(cmd);	
+	system(cmd);
+	char cmd[256];
+	sprintf(cmd, "rm -rf cipher");
+	system(cmd);		
 	return 0;	
 }

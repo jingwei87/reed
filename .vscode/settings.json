@@ -6,6 +6,8 @@
         "*.tcc": "cpp",
         "*.ipp": "cpp",
         "array": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp"
     }
 }
