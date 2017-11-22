@@ -243,7 +243,7 @@ int Uploader::indicateEnd(long long* total, long long* uniq){
 int Uploader::uploadStub(char* name, int namesize) {
 
 	char fullname[256];
-	sprintf(fullname, "%s.meta", name);
+	sprintf(fullname, "%s.stub", name);
 	FILE* fp = fopen(fullname, "r");
 	fseek(fp, 0, SEEK_END);
 	int length = ftell(fp);

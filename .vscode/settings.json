@@ -5,6 +5,7 @@
         "typeinfo": "cpp",
         "*.tcc": "cpp",
         "*.ipp": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "thread": "cpp"
     }
 }

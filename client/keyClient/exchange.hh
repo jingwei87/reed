@@ -248,5 +248,7 @@ class KeyEx{
 
 		void updateFileByPolicy(int user, char* filePath, int pathSize, char* PolicyPath);
 
+		void cpabeKeygen(int userID);
+
 };
 #endif

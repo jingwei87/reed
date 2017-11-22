@@ -451,7 +451,42 @@ void* SocketHandlerKey(void* lp){
 		}
 
 		if (indicator == DOWNLOAD_KEY) {
-			
+			if((bytecount = recv(*clientSock, buffer, sizeof(int), 0)) == -1){
+				fprintf(stderr, "Error receiving data %d\n", errno);
+			}
+
+			/* get file name */
+			int namesize = *(int*)buffer;
+
+			char namebuffer[33];
+			if((bytecount = recv(*clientSock, namebuffer, namesize, 0)) == -1){
+				fprintf(stderr, "Error receiving data %d\n", errno);
+			}
+			namebuffer[32] = '\0';
+
+			/* read the target cipher file */
+			char name[256];
+			sprintf(name, "keystore/%s.cipher", namebuffer);
+
+			FILE* fp = fopen(name, "r");
+			fseek(fp, 0, SEEK_END);
+			int length = ftell(fp);
+			fseek(fp, 0, SEEK_SET);
+
+			char* cipher = (char*)malloc(sizeof(char)*length+sizeof(int));
+			memcpy(cipher, &length, sizeof(int));
+
+			int ret;
+			ret = fread(cipher+4, 1, length, fp);
+			if (ret != length){
+				printf("error reading cipher file\n");
+			}
+			fclose(fp);
+			/* send back cipher */
+			if ((bytecount = send(*clientSock, cipher, length+4, 0)) == -1){
+				fprintf(stderr, "Error sending data %d\n", errno);
+			}
+			free(cipher);
 			break;
 		}
 

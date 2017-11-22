@@ -278,7 +278,9 @@ int main(int argc, char *argv[]) {
 		/* init objects */
 		decoderObj = new Decoder(n, securetype);
 		downloaderObj = new Downloader(n,n,userID,decoderObj,confObj);
+		downloaderObj->downloadStub(argv[1],namesize);
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
+		keyObj ->cpabeKeygen(userID);
 		keyObj->downloadFile(userID, argv[1], namesize);
 		double timer; //bw;
 		string downloadPath(argv[1]);
@@ -288,7 +290,6 @@ int main(int argc, char *argv[]) {
 		/* download stub first */
 
 		cout<<"stub "<<endl;
-		downloaderObj->downloadStub(argv[1],namesize);
 		decoderObj->init(argv[1]);
 		decoderObj->setFilePointer(fw);
 		decoderObj->setShareIDList(kShareIDList);
@@ -304,13 +305,19 @@ int main(int argc, char *argv[]) {
 		delete downloaderObj;
 		delete decoderObj;
 		char cmd[256];
-		// sprintf(cmd, "rm -rf %s.stub.d", argv[1]);
+		sprintf(cmd, "rm -rf %s.stub.d", argv[1]);
 		system(cmd);
 	}
 	cout<<"temp file clean up, download end"<<endl;
 
 
 	if (strncmp(opt,"-r",2) == 0){
+		decoderObj = new Decoder(n, securetype);
+		downloaderObj = new Downloader(n,n,userID,decoderObj,confObj);
+		downloaderObj->downloadStub(argv[1],namesize);
+		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
+		keyObj ->cpabeKeygen(userID);
+		keyObj->downloadFile(userID, argv[1], namesize);
 		cout << "Please Input The PolicyPath" <<endl;
 		char *PolicyPath =  (char*)malloc(sizeof(char)*256);
 		scanf("%s",PolicyPath);
@@ -320,11 +327,10 @@ int main(int argc, char *argv[]) {
 		uploaderObj = new Uploader(n,n,userID,confObj);
 		encoderObj = new Encoder(n, securetype, uploaderObj);
 		
-		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0),CHARA_MIN_HASH,VAR_SEG);
 		keyObj->readKeyFile("./keys/public.pem");
 		
 		keyObj->updateFileByPolicy(userID, argv[1], namesize, PolicyPath);
-
+		uploaderObj->uploadStub(argv[1],namesize);
 		split = timerSplit(&timer);
 		bw = readInFileSize/1024/1024/split;
 		printf("%lf\t%lf\n", bw, split);

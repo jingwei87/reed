@@ -642,7 +642,7 @@ void KeyEx::newFile(int user, char* filePath, int pathSize) {
 
 	//system call for cpabe
 	char cmd[256];
-	snprintf(cmd, sizeof(cmd), "cpabe-enc keys/pub_key temp_cpabe 'id = 1'");
+	snprintf(cmd, sizeof(cmd), "cpabe-enc keys/pub_key temp_cpabe 'id = %d'",user);
 	system(cmd);
 
 	// read cipher
@@ -679,157 +679,238 @@ void KeyEx::newFile(int user, char* filePath, int pathSize) {
 
 void KeyEx::downloadFile(int user, char* filePath, int pathSize) {
 	
-	BIGNUM *s = BN_new();
-	BN_pseudo_rand(s, 256, -1, 0);
 	//send indicator
 	int indicator = DOWNLOAD_KEY;
 	Socket *sock = new Socket(ksip_, ksport_, user);
 	sock->genericSend((char*)&indicator, sizeof(int));
+	char* filename = (char*)malloc(sizeof(char)*pathSize+sizeof(int));
+	memcpy(filename, &user, 4);
+	memcpy(filename+4, filePath, pathSize);
+
+	char namebuffer[32+4];
+	int hash_length = 32;
+	//	hash file name 
+	memcpy(namebuffer, &hash_length, sizeof(int));
+	cryptoObj_->generateHash((unsigned char*)filename, pathSize+4, (unsigned char*)namebuffer+4);
+	//	SEND 2: (36 bytes) send the hashed file name
+	sock->genericSend(namebuffer, 36);
+	// 	RECV 3: (4 bytes) download the cipher size
+	int length;
+	char tmp[4];
+	sock->genericDownload(tmp, 4);
+	memcpy(&length, tmp, 4);
+	char* cipher = (char*)malloc(sizeof(char)*length);
+	// 	RECV 4: (cipher length) download the cipher
+	sock->genericDownload(cipher, length);
+	FILE *fp = fopen("cipher.cpabe", "w");
+	fwrite(cipher, 1, length, fp);
+	fclose(fp);
+	free(cipher);
+	// 	dec the cipher with private secret
+	char cmd[MAX_CMD_LENGTH];
+	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk cipher.cpabe");
+	system(cmd);
+	// read cipher
+	fp = fopen("cipher","r");
+	fseek(fp, 0, SEEK_END);
+	length = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	if (length != HASH_SIZE) {
+
+		cerr<<"key length inconsistent"<<endl;
+	}
+	// store old key
+	char seed[HASH_SIZE];
+	fread(seed,1, HASH_SIZE, fp);
+	fclose(fp);
+	
+	int ver;
+	int id;
+	BIGNUM *s = BN_new();
+	// convert seed into BN
+	BN_bin2bn((unsigned char*)seed, HASH_SIZE, s);
+	// read ID and state version
+
+	unsigned char old_key[HASH_SIZE];
+	// compute old key
+	cryptoObj_->generateHash((unsigned char*)seed, HASH_SIZE, old_key);
+	// update the state to next version
+	// write new key to file
+	// load policy
+	// update stub
+	char name[256];
+	sprintf(name, "%s.stub.d", filePath);
+	fp = fopen(name, "r");
+	
+	fseek(fp, 0, SEEK_END);
+	length = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	unsigned char* v1 = (unsigned char*)malloc(sizeof(unsigned char)*length);
+	unsigned char* v2 = (unsigned char*)malloc(sizeof(unsigned char)*length);
+	fread(v1, 1, length, fp);
+	fclose(fp);
+	// decrypt old stub
+	cryptoObj_->decryptWithKey(v1, length, old_key, v2);
+	// encrypt new stub
+	// write new stub
+	fp = fopen(name, "w");
+	
+	fwrite(v2, length, 1, fp);
+	fclose(fp);
+	delete(sock);
+	free(v1);
+	free(v2);
 }
 
 void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char* PolicyPath) {
 	
-		int indicator = KEY_UPDATE;
-		Socket *sock = new Socket(ksip_, ksport_, user);
-		// 	SEND 1: (4 byte) state update indicator
-		sock->genericSend((char*)&indicator, sizeof(int));
-		char* filename = (char*)malloc(sizeof(char)*pathSize+sizeof(int));
-		memcpy(filename, &user, 4);
-		memcpy(filename+4, filePath, pathSize);
-	
-		char namebuffer[32+4];
-		int hash_length = 32;
-		//	hash file name 
-		memcpy(namebuffer, &hash_length, sizeof(int));
-		cryptoObj_->generateHash((unsigned char*)filename, pathSize+4, (unsigned char*)namebuffer+4);
-		//	SEND 2: (36 bytes) send the hashed file name
-		sock->genericSend(namebuffer, 36);
-		// 	RECV 3: (4 bytes) download the cipher size
-		int length;
-		char tmp[4];
-		sock->genericDownload(tmp, 4);
-		memcpy(&length, tmp, 4);
-		char* cipher = (char*)malloc(sizeof(char)*length);
-		// 	RECV 4: (cipher length) download the cipher
-		sock->genericDownload(cipher, length);
-		FILE *fp = fopen("cipher.cpabe", "w");
-		fwrite(cipher, 1, length, fp);
-		fclose(fp);
-		free(cipher);
-		// 	dec the cipher with private secret
-		char cmd[MAX_CMD_LENGTH];
-		snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk cipher.cpabe");
-		system(cmd);
-		// read cipher
-		fp = fopen("cipher","r");
-		fseek(fp, 0, SEEK_END);
-		length = ftell(fp);
-		fseek(fp, 0, SEEK_SET);
-		if (length != HASH_SIZE) {
-	
-			cerr<<"key length inconsistent"<<endl;
-		}
-		// store old key
-		char seed[HASH_SIZE];
-		fread(seed,1, HASH_SIZE, fp);
-		fclose(fp);
-		// download meta length
-		sock->genericDownload(tmp, sizeof(int));
-		memcpy(&length, tmp, sizeof(int));
-		// download meta
-		char* meta = (char*)malloc(sizeof(char)*length);
-		sock->genericDownload(meta, length);
-		
-		int ver;
-		int id;
-		BIGNUM *e = BN_new();
-		BIGNUM *n = BN_new();
-		BIGNUM *s = BN_new();
-		BN_CTX *ctx = BN_CTX_new();
-		// convert seed into BN
-		BN_bin2bn((unsigned char*)seed, HASH_SIZE, s);
-		// read ID and state version
-		memcpy(&id, meta, sizeof(int));
-		memcpy(&ver, meta+sizeof(int), sizeof(int));
-		// convert RSA e and n
-		BN_bin2bn((unsigned char*)(meta+sizeof(int)*2), COMPUTE_SIZE, e);
-		BN_bin2bn((unsigned char*)(meta+sizeof(int)*2+COMPUTE_SIZE), COMPUTE_SIZE, n);
-	
-		unsigned char old_key[HASH_SIZE];
-		unsigned char new_key[HASH_SIZE];
-		// compute old key
-		cryptoObj_->generateHash((unsigned char*)seed, HASH_SIZE, old_key);
-		// update the state to next version
-		BN_mod_exp(s, s, e, n, ctx);
-		memset(seed, 0, HASH_SIZE);
-		// compute new seed
-		BN_bn2bin(s, (unsigned char*)seed+(HASH_SIZE-BN_num_bytes(s)));
-		// compute new key
-		cryptoObj_->generateHash((unsigned char*)seed, HASH_SIZE, new_key);
-		// write new key to file
-		fp = fopen("temp_cpabe","w");
-		fwrite(seed, 1, HASH_SIZE, fp);
-		fclose(fp);
-		// write policy
-		int tt = 400;
-		fp = fopen(PolicyPath,"w");
-		for (int i = 0; i < tt; i++) {
-	
-			sprintf(cmd, "id = %d", i);
-			fwrite(cmd,1,strlen(cmd),fp);
-			if (i != tt-1) {
-	
-				sprintf(cmd, " or ");
-				fwrite(cmd,1, 4, fp);
-			}
-		}
-		fclose(fp);
-		// load policy
-		fp = fopen(PolicyPath,"r");
-		fseek(fp, 0, SEEK_END);
-		int pl = ftell(fp);
-		fseek(fp, 0, SEEK_SET);
-		char* p = (char*)malloc(sizeof(char)*(pl+1));
-		fread(p, 1, pl, fp);
-		fclose(fp);
-		p[pl] = '\0';
-		// re-encrypt the key state
-		snprintf(cmd, sizeof(cmd), "cpabe-enc keys/pub_key temp_cpabe '%s'", p);
-		system(cmd);
-		// get new cipher size
-		fp = fopen("temp_cpabe.cpabe","r");
-		fseek(fp, 0, SEEK_END);
-		length = ftell(fp);
-		fseek(fp, 0, SEEK_SET);
-		char* new_cipher = (char*)malloc(sizeof(char)*length+sizeof(int));
-		memcpy(new_cipher, &length, sizeof(int));
-		fread(new_cipher+sizeof(int), 1, length, fp);
-		fclose(fp);
-		// send new key cipher
-		sock->genericSend(new_cipher, length+4);
-		// update stub
-		char name[256];
-		sprintf(name, "%s.stub", filePath);
-		fp = fopen(name, "r");
-		
-		fseek(fp, 0, SEEK_END);
-		length = ftell(fp);
-		fseek(fp, 0, SEEK_SET);
-		unsigned char* v1 = (unsigned char*)malloc(sizeof(unsigned char)*length);
-		unsigned char* v2 = (unsigned char*)malloc(sizeof(unsigned char)*length);
-		fread(v1, 1, length, fp);
-		fclose(fp);
-		// decrypt old stub
-		cryptoObj_->decryptWithKey(v1, length, old_key, v2);
-		// encrypt new stub
-		cryptoObj_->encryptWithKey(v2, length, new_key, v1);
-		// write new stub
-		fp = fopen(name, "w");
-		
-		fwrite(v1, length, 1, fp);
-		fclose(fp);
-		delete(sock);
-		free(v1);
-		free(v2);
-		free(new_cipher);
+	int indicator = KEY_UPDATE;
+	Socket *sock = new Socket(ksip_, ksport_, user);
+	// 	SEND 1: (4 byte) state update indicator
+	sock->genericSend((char*)&indicator, sizeof(int));
+	char* filename = (char*)malloc(sizeof(char)*pathSize+sizeof(int));
+	memcpy(filename, &user, 4);
+	memcpy(filename+4, filePath, pathSize);
+
+	char namebuffer[32+4];
+	int hash_length = 32;
+	//	hash file name 
+	memcpy(namebuffer, &hash_length, sizeof(int));
+	cryptoObj_->generateHash((unsigned char*)filename, pathSize+4, (unsigned char*)namebuffer+4);
+	//	SEND 2: (36 bytes) send the hashed file name
+	sock->genericSend(namebuffer, 36);
+	// 	RECV 3: (4 bytes) download the cipher size
+	int length;
+	char tmp[4];
+	sock->genericDownload(tmp, 4);
+	memcpy(&length, tmp, 4);
+	char* cipher = (char*)malloc(sizeof(char)*length);
+	// 	RECV 4: (cipher length) download the cipher
+	sock->genericDownload(cipher, length);
+	FILE *fp = fopen("cipher.cpabe", "w");
+	fwrite(cipher, 1, length, fp);
+	fclose(fp);
+	free(cipher);
+	// 	dec the cipher with private secret
+	char cmd[MAX_CMD_LENGTH];
+	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk cipher.cpabe");
+	system(cmd);
+	// read cipher
+	fp = fopen("cipher","r");
+	fseek(fp, 0, SEEK_END);
+	length = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	if (length != HASH_SIZE) {
+
+		cerr<<"key length inconsistent"<<endl;
 	}
+	// store old key
+	char seed[HASH_SIZE];
+	fread(seed,1, HASH_SIZE, fp);
+	fclose(fp);
+	// download meta length
+	sock->genericDownload(tmp, sizeof(int));
+	memcpy(&length, tmp, sizeof(int));
+	// download meta
+	char* meta = (char*)malloc(sizeof(char)*length);
+	sock->genericDownload(meta, length);
+	
+	int ver;
+	int id;
+	BIGNUM *e = BN_new();
+	BIGNUM *n = BN_new();
+	BIGNUM *s = BN_new();
+	BN_CTX *ctx = BN_CTX_new();
+	// convert seed into BN
+	BN_bin2bn((unsigned char*)seed, HASH_SIZE, s);
+	// read ID and state version
+	memcpy(&id, meta, sizeof(int));
+	memcpy(&ver, meta+sizeof(int), sizeof(int));
+	// convert RSA e and n
+	BN_bin2bn((unsigned char*)(meta+sizeof(int)*2), COMPUTE_SIZE, e);
+	BN_bin2bn((unsigned char*)(meta+sizeof(int)*2+COMPUTE_SIZE), COMPUTE_SIZE, n);
+
+	unsigned char old_key[HASH_SIZE];
+	unsigned char new_key[HASH_SIZE];
+	// compute old key
+	cryptoObj_->generateHash((unsigned char*)seed, HASH_SIZE, old_key);
+	// update the state to next version
+	BN_mod_exp(s, s, e, n, ctx);
+	memset(seed, 0, HASH_SIZE);
+	// compute new seed
+	BN_bn2bin(s, (unsigned char*)seed+(HASH_SIZE-BN_num_bytes(s)));
+	// compute new key
+	cryptoObj_->generateHash((unsigned char*)seed, HASH_SIZE, new_key);
+	// write new key to file
+	fp = fopen("temp_cpabe","w");
+	fwrite(seed, 1, HASH_SIZE, fp);
+	fclose(fp);
+	// write policy
+	int tt = 400;
+	fp = fopen(PolicyPath,"w");
+	for (int i = 0; i < tt; i++) {
+
+		sprintf(cmd, "id = %d", i);
+		fwrite(cmd,1,strlen(cmd),fp);
+		if (i != tt-1) {
+
+			sprintf(cmd, " or ");
+			fwrite(cmd,1, 4, fp);
+		}
+	}
+	fclose(fp);
+	// load policypolicy
+	fp = fopen(PolicyPath,"r");
+	fseek(fp, 0, SEEK_END);
+	int pl = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	char* p = (char*)malloc(sizeof(char)*(pl+1));
+	fread(p, 1, pl, fp);
+	fclose(fp);
+	p[pl] = '\0';
+	// re-encrypt the key state
+	snprintf(cmd, sizeof(cmd), "cpabe-enc keys/pub_key temp_cpabe '%s'", p);
+	system(cmd);
+	// get new cipher size
+	fp = fopen("temp_cpabe.cpabe","r");
+	fseek(fp, 0, SEEK_END);
+	length = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	char* new_cipher = (char*)malloc(sizeof(char)*length+sizeof(int));
+	memcpy(new_cipher, &length, sizeof(int));
+	fread(new_cipher+sizeof(int), 1, length, fp);
+	fclose(fp);
+	// send new key cipher
+	sock->genericSend(new_cipher, length+4);
+	// update stub
+	char name[256];
+	sprintf(name, "%s.stub", filePath);
+	fp = fopen(name, "r");
+	
+	fseek(fp, 0, SEEK_END);
+	length = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	unsigned char* v1 = (unsigned char*)malloc(sizeof(unsigned char)*length);
+	unsigned char* v2 = (unsigned char*)malloc(sizeof(unsigned char)*length);
+	fread(v1, 1, length, fp);
+	fclose(fp);
+	// decrypt old stub
+	cryptoObj_->decryptWithKey(v1, length, old_key, v2);
+	// encrypt new stub
+	cryptoObj_->encryptWithKey(v2, length, new_key, v1);
+	// write new stub
+	fp = fopen(name, "w");
+	
+	fwrite(v1, length, 1, fp);
+	fclose(fp);
+	delete(sock);
+	free(v1);
+	free(v2);
+	free(new_cipher);
+}
+
+void KeyEx::cpabeKeygen(int userID){
+	char cmd[256];
+	snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/pk keys/pub_key keys/master_key 'id = %d'",userID);
+	system(cmd);
+}
