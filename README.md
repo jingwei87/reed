@@ -180,9 +180,11 @@ useage: ./CLIENT {filename} {userID} {action} {securityType}
 
 - {filename}: a full pathname of a upload or download file 
 - {userID}: an identifier of the current client
-- {action}: [-u] for upload or [-d] for download
+- {action}: [-u] for upload or [-d] for download or [-r] for rekeying
 - {securityType}: [HIGH] for advanced encryption scheme combined with AES256 and SHA256 or basic encryption scheme combined with AES128 and SHA1
 ```
+
+in this version you could type policy by numbers to rekey your file and you can download it with your policy, and the userID must be a number too.
 
 ## Maintainers
 
