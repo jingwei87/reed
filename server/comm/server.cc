@@ -410,8 +410,13 @@ void* SocketHandlerKey(void* lp){
 			int ciphersize = *(int*)buffer;
 
 			/* recv cipher */
-			if((bytecount = recv(*clientSock, buffer, ciphersize, 0)) == -1){
-				fprintf(stderr, "Error receiving data %d\n", errno);
+			int total = 0;
+			while (total < ciphersize) {
+				
+				if((bytecount = recv(*clientSock, buffer+total, ciphersize-total, 0)) == -1){
+					fprintf(stderr, "Error receiving data %d\n", errno);
+				}
+				total+=bytecount;
 			}
 
 			fwrite(buffer, 1, ciphersize, fp);
@@ -425,10 +430,14 @@ void* SocketHandlerKey(void* lp){
 			int metasize = *(int*)buffer;
 
 			/* recv meta */
-			if((bytecount = recv(*clientSock, buffer, metasize, 0)) == -1){
-				fprintf(stderr, "Error receiving data %d\n", errno);
+			total = 0;
+			while (total < metasize) {
+				
+				if((bytecount = recv(*clientSock, buffer+total, metasize-total, 0)) == -1){
+					fprintf(stderr, "Error receiving data %d\n", errno);
+				}
+				total+=bytecount;
 			}
-
 			sprintf(name, "keystore/%s.meta", namebuffer);
 
 			fp = fopen(name, "w");
@@ -442,7 +451,42 @@ void* SocketHandlerKey(void* lp){
 		}
 
 		if (indicator == DOWNLOAD_KEY) {
-			
+			if((bytecount = recv(*clientSock, buffer, sizeof(int), 0)) == -1){
+				fprintf(stderr, "Error receiving data %d\n", errno);
+			}
+
+			/* get file name */
+			int namesize = *(int*)buffer;
+
+			char namebuffer[33];
+			if((bytecount = recv(*clientSock, namebuffer, namesize, 0)) == -1){
+				fprintf(stderr, "Error receiving data %d\n", errno);
+			}
+			namebuffer[32] = '\0';
+
+			/* read the target cipher file */
+			char name[256];
+			sprintf(name, "keystore/%s.cipher", namebuffer);
+
+			FILE* fp = fopen(name, "r");
+			fseek(fp, 0, SEEK_END);
+			int length = ftell(fp);
+			fseek(fp, 0, SEEK_SET);
+
+			char* cipher = (char*)malloc(sizeof(char)*length+sizeof(int));
+			memcpy(cipher, &length, sizeof(int));
+
+			int ret;
+			ret = fread(cipher+4, 1, length, fp);
+			if (ret != length){
+				printf("error reading cipher file\n");
+			}
+			fclose(fp);
+			/* send back cipher */
+			if ((bytecount = send(*clientSock, cipher, length+4, 0)) == -1){
+				fprintf(stderr, "Error sending data %d\n", errno);
+			}
+			free(cipher);
 			break;
 		}
 
@@ -511,9 +555,14 @@ void* SocketHandlerKey(void* lp){
 				fprintf(stderr, "Error receiving data %d\n", errno);
 			}
 			int ciphersize = *(int*)buffer;
-			if ((bytecount = recv(*clientSock, buffer, ciphersize, 0)) == -1) {
-
-				fprintf(stderr, "Error receiving data %d\n", errno);
+			int total = 0;
+			while (total < length) {
+				
+				if ((bytecount = recv(*clientSock, buffer+total, ciphersize-total, 0)) == -1) {
+	
+					fprintf(stderr, "Error receiving data %d\n", errno);
+				}
+				total+=bytecount;
 			}
 			fwrite(buffer, 1, ciphersize, fp);
 			fclose(fp);
@@ -523,9 +572,14 @@ void* SocketHandlerKey(void* lp){
 				fprintf(stderr, "Error receiving data %d\n", errno);
 			}
 			int metasize = *(int*)buffer;
-			if ((bytecount = recv(*clientSock, buffer, metasize, 0)) == -1) {
-
-				fprintf(stderr, "Error receiving data %d\n", errno);
+			total = 0;
+			while (total < length) {
+				
+				if ((bytecount = recv(*clientSock, buffer+total, metasize-total, 0)) == -1) {
+	
+					fprintf(stderr, "Error receiving data %d\n", errno);
+				}
+				total+=bytecount;
 			}
 			sprintf(name, "keystore/%s.meta", namebuffer);
 			fp = fopen(name, "w");

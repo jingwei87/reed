@@ -242,9 +242,11 @@ class KeyEx{
 			
 		 	note : called when update secrets
 		*/ 
-		void updateFile(int user, char* filePath, int pathSize);
+		void updateFileByPolicy(int user, char* filePath, int pathSize, int oldPolicy, int newPolicy);
 
-		void downloadFile(int user, char* filePath, int pathSize);
+		void downloadFile(int user, char* filePath, int pathSize, int policy);
+
+		void cpabeKeygen(int userID);
 
 };
 #endif

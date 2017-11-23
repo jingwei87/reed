@@ -57,12 +57,11 @@ void usage() {
 	cout<<"usage: ./CLIENT [filename] [userID] [action] [secutiyType]"<<endl;
 	cout<<setw(4)<<"- [filename]: full path of the file;"<<endl;
 	cout<<setw(4)<<"- [userID]: use ID of current client;"<<endl;
-	cout<<setw(4)<<"- [action]: [-u] upload; [-d] download;"<<endl;
+	cout<<setw(4)<<"- [action]: [-u] upload; [-d] download; [-r] rekeying;"<<endl;
 	cout<<setw(4)<<"- [securityType]: [HIGH] AES-256 & SHA-256; [LOW] AES-128 & SHA-1"<<endl;
 	exit(1);
 }
-
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
 	/* argument check */
 	if (argc != 5) {
 		
@@ -171,6 +170,7 @@ int main(int argc, char *argv[]){
 		uploaderObj = new Uploader(n,n,userID, confObj);
 		encoderObj = new Encoder(n, securetype, uploaderObj);
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
+		keyObj ->cpabeKeygen(userID);
 		keyObj->readKeyFile("./keys/public.pem");
 		keyObj->newFile(userID, argv[1], namesize);
 
@@ -266,7 +266,7 @@ int main(int argc, char *argv[]){
 		delete encoderObj;
 		inputFile.close();
 		char cmd_1[256];
-		sprintf(cmd_1, "rm -rf %s.stub", argv[1]);
+		// sprintf(cmd_1, "rm -rf %s.stub", argv[1]);
 		char cmd_2[256];
 		sprintf(cmd_2, "rm -rf %s.meta", argv[1]);
 		system(cmd_1);
@@ -279,8 +279,13 @@ int main(int argc, char *argv[]){
 		/* init objects */
 		decoderObj = new Decoder(n, securetype);
 		downloaderObj = new Downloader(n,n,userID,decoderObj,confObj);
+		downloaderObj->downloadStub(argv[1],namesize);
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
-		keyObj->downloadFile(userID, argv[1], namesize);
+		keyObj ->cpabeKeygen(userID);
+		cout << "if you rekeyed the file, type in new policy, if not type userID again"<<endl;
+		int policy;
+		scanf("%d",&policy);
+		keyObj->downloadFile(userID, argv[1], namesize,policy);
 		double timer; //bw;
 		string downloadPath(argv[1]);
 		downloadPath += ".d";
@@ -289,7 +294,6 @@ int main(int argc, char *argv[]){
 		/* download stub first */
 
 		cout<<"stub "<<endl;
-		downloaderObj->downloadStub(argv[1],namesize);
 		decoderObj->init(argv[1]);
 		decoderObj->setFilePointer(fw);
 		decoderObj->setShareIDList(kShareIDList);
@@ -307,22 +311,48 @@ int main(int argc, char *argv[]){
 		char cmd[256];
 		sprintf(cmd, "rm -rf %s.stub.d", argv[1]);
 		system(cmd);
+		sprintf(cmd, "rm -rf cipher");
+		system(cmd);
+		sprintf(cmd, "rm -rf temp_cpabe.cpabe");
+		system(cmd);
 	}
 	cout<<"temp file clean up, download end"<<endl;
 
 
 	if (strncmp(opt,"-r",2) == 0){
+		decoderObj = new Decoder(n, securetype);
+		downloaderObj = new Downloader(n,n,userID,decoderObj,confObj);
+		downloaderObj->downloadStub(argv[1],namesize);
+		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
+		cout << "if you rekeyed the file, type in the old policy, if not type userID again"<<endl;
+		int oldPolicy;
+		scanf("%d",&oldPolicy);
+		int newPolicy;
+		cout << "type new policy"<<endl;
+		scanf("%d",&newPolicy);
+		keyObj->downloadFile(userID, argv[1], namesize,oldPolicy);
 		double timer,split,bw;
 		timerStart(&timer);
 		uploaderObj = new Uploader(n,n,userID,confObj);
 		encoderObj = new Encoder(n, securetype, uploaderObj);
-		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0),CHARA_MIN_HASH,VAR_SEG);
+		
 		keyObj->readKeyFile("./keys/public.pem");
-
-		keyObj->updateFile(userID, argv[1], namesize);
+		
+		keyObj->updateFileByPolicy(userID, argv[1], namesize, oldPolicy,newPolicy);
+		uploaderObj->uploadStub(argv[1],namesize);
 		split = timerSplit(&timer);
 		bw = readInFileSize/1024/1024/split;
 		printf("%lf\t%lf\n", bw, split);
+		char cmd[256];
+		sprintf(cmd, "rm -rf cipher");
+		system(cmd);
+		sprintf(cmd, "rm -rf temp_cpabe.cpabe");
+		system(cmd);
+		char name[256];
+		sprintf(name, "%s.stub", argv[1]);
+		sprintf(cmd, "rm -rf %s",name);
+		system(cmd);		
+
 	}
 	free(buffer);
 	free(chunkEndIndexList);
@@ -331,9 +361,5 @@ int main(int argc, char *argv[]){
 	free(kShareIDList);
 	CryptoPrimitive::opensslLockCleanup();
 	inputFile.close();
-
-	char cmd[256];
-	sprintf(cmd, "rm -rf temp_cpabe.cpabe");
-	system(cmd);	
 	return 0;	
 }
