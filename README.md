@@ -186,6 +186,62 @@ useage: ./CLIENT {filename} {userID} {action} {securityType}
 
 in this version you could type policy by numbers to rekey your file and you can download it with your policy, and the userID must be a number too.
 
+### Upload Fuction
+
+You need to make sure and remember your userID. The userID will be asked when you download the file.
+
+For example: 
+```
+./CLIENT /home/Documents/main.cc 1 -u HIGH
+```
+You can upload "/home/Documents/main.cc" in userID 1 with advanced encryption.
+(The userID 1 is the initial policy for cpabe-enc)
+
+
+### Download Function
+
+You can start download your file as following example: 
+
+```
+./CLIENT /home/Documents/main.cc 1 -d HIGH
+```
+
+Then, after prompt statement like that: 
+
+```
+if you rekeyed the file, type in new policy, if not type userID again
+```
+
+you should type in your policy (if you rekeyed the file) or your userID (didn't rekeyed).Then you can get back your file in the same path.
+
+**pay attention: you need to use the same securityType when upload file and download it**
+
+### Rekeying Function
+
+You can start rekeying your file as following example: 
+
+```
+./CLIENT /home/Documents/main.cc 1 -r HIGH
+```
+
+Then, after prompt statement like that: 
+
+```
+if you rekeyed the file, type in the old policy, if not type userID again
+```
+
+you should type in your old policy (if you rekeyed the file / you're not the first time to rekeying the file) or your userID (didn't rekeyed / you're going to rekeying the file for first time).
+
+After type in your old policy (or userID), you will get the promt statement like that: 
+
+```
+type new policy
+```
+
+In this time, you should type in your new policy to rekeying the file and generate new private cpabe key.
+
+**Pay attention: in this version, you can just us a number as your policy**
+
 ## Maintainers
 
  * Origin maintainer:

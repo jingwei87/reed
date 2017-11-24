@@ -146,3 +146,53 @@ int Ssl::genericDownload(char * raw, int rawSize){
 	}
 	return 0;
 }
+
+
+/*
+ * initiate downloading a file
+ *
+ * @param filename - the full name of the targeting file
+ * @param namesize - the size of the file path
+ *
+ *
+ */
+int Ssl::initDownload(char* filename, int namesize) {
+	
+	int indicator = INIT_DOWNLOAD;
+
+	memcpy(buffer_, &indicator, sizeof(int));
+	memcpy(buffer_+sizeof(int), &namesize, sizeof(int));
+	memcpy(buffer_+2*sizeof(int), filename, namesize);
+	genericSend(buffer_, sizeof(int)*2+namesize);
+
+	return 0;
+}
+
+/*
+ * download a chunk of data
+ *
+ * @param raw - the returned raw data chunk
+ * @param retSize - the size of returned data chunk
+ * @return raw 
+ * @return retSize
+ */
+int Ssl::downloadChunk(char * raw, int* retSize) {
+
+	int bytecount;
+
+	char * buffer = (char*)malloc(sizeof(char)*SOCKET_BUFFER_SIZE);
+	if ((bytecount = SSL_read(ssl_, buffer, sizeof(int))) == -1) {
+		
+		fprintf(stderr, "Error receiving data %d\n", errno);
+	}
+	if ((bytecount = SSL_read(ssl_, buffer, sizeof(int))) == -1) {
+
+		fprintf(stderr, "Error receiving data %d\n", errno);
+		return -1;
+	}
+	*retSize =  *(int*)buffer;
+	
+	genericDownload(raw, * retSize);
+	return 0;
+}
+

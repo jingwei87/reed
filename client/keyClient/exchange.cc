@@ -583,10 +583,7 @@ void KeyEx::downloadFile(int user, char* filePath, int pathSize, int policy) {
 	unsigned char old_key[HASH_SIZE];
 	// compute old key
 	cryptoObj_->generateHash((unsigned char*)seed, HASH_SIZE, old_key);
-	// update the state to next version
-	// write new key to file
-	// load policy
-	// update stub
+
 	char name[256];
 	sprintf(name, "%s.stub.d", filePath);
 	fp = fopen(name, "r");

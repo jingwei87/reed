@@ -29,7 +29,19 @@
 #define SSL_CLIENT_CRT "./keys/client.crt"
 #define SSL_CLIENT_KEY "./keys/private/client.key"
 
+
+
+#define SOCKET_BUFFER_SIZE (8+4*1024*1024)
+
+/* action indicators */
+#define SEND_META (-1)
+#define SEND_DATA (-2)
+#define GET_STAT (-3)
+#define INIT_DOWNLOAD (-7)
+
 using namespace std;
+
+
 
 class Ssl{
 	private:
@@ -45,6 +57,9 @@ class Ssl{
 		/* host socket */
 		SSL_CTX* ctx_;
 		SSL* ssl_;
+
+		char buffer_[SOCKET_BUFFER_SIZE];
+
 
 	public:
 
@@ -81,6 +96,55 @@ class Ssl{
 		int genericDownload(char *raw, int rawSize);
 
 		void closeConn();
+
+		/*
+		 * metadata send function
+		 *
+		 * @param raw - raw data buffer_
+		 * @param rawSize - size of raw data
+		 *
+		 */
+		int sendMeta(char * raw, int rawSize);
+
+		/*
+		 * data send function
+		 *
+		 * @param raw - raw data buffer_
+		 * @param rawSize - size of raw data
+		 *
+		 */ 
+		int sendData(char * raw, int rawSize); 
+
+		/*
+		 * status recv function
+		 *
+		 * @param statusList - return int list
+		 * @param num - num of returned indicator
+		 *
+		 * @return statusList
+		 */
+		int getStatus(bool * statusList, int* numOfShare); 
+
+		/*
+		 * initiate downloading a file
+		 *
+		 * @param filename - the full name of the targeting file
+		 * @param namesize - the size of the file path
+		 *
+		 *
+		 */
+		int initDownload(char * filename, int namesize);
+
+		/*
+		 * download a chunk of data
+		 *
+		 * @param raw - the returned raw data chunk
+		 * @param retSize - the size of returned data chunk
+		 * @return raw 
+		 * @return retSize
+		 */ 
+		int downloadChunk(char* raw, int* retSize);
+
 };
 
 #endif
