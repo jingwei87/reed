@@ -252,7 +252,6 @@ int Uploader::uploadStub(char* name, int namesize) {
 	char* stub = (char*)malloc(sizeof(char)*length);
 
 	int ret = fread(stub, 1, length, fp);
-	cout << "flag" << endl;
 	if (ret == 0) {
 		printf("fail to open stub file before upload\n");
 		return 0;

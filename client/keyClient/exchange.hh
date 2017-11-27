@@ -234,7 +234,7 @@ class KeyEx{
 			
 		 	note : called when upload first secerts
 		*/ 
-		void newFile(int user, char* filePath, int pathSize);
+		void newFile(int user, char* filePath, int pathSize, char *policy);
 
 		/*
 			function : update existing file's state cipher
@@ -242,11 +242,13 @@ class KeyEx{
 			
 		 	note : called when update secrets
 		*/ 
-		void updateFileByPolicy(int user, char* filePath, int pathSize, int oldPolicy, int newPolicy);
+		void updateFileByPolicy(int user, char* filePath, int pathSize, char *oldPk, char *newPk, char* policy);
 
-		void downloadFile(int user, char* filePath, int pathSize, int policy);
+		void downloadFile(int user, char* filePath, int pathSize, char *pk);
 
-		void cpabeKeygen(int userID);
+		
 
 };
+
+void cpabeKeygen(char* pk, char *policy);
 #endif

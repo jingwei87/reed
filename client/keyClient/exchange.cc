@@ -459,7 +459,7 @@ void KeyEx::createTable() {
 
 
 
-void KeyEx::newFile(int user, char* filePath, int pathSize) {
+void KeyEx::newFile(int user, char* filePath, int pathSize, char *policy) {
 
 	BIGNUM *s = BN_new();
 	BN_pseudo_rand(s, 256, -1, 0);
@@ -497,7 +497,7 @@ void KeyEx::newFile(int user, char* filePath, int pathSize) {
 
 	//system call for cpabe
 	char cmd[256];
-	snprintf(cmd, sizeof(cmd), "cpabe-enc keys/pub_key temp_cpabe 'id = %d'",user);
+	snprintf(cmd, sizeof(cmd), "cpabe-enc keys/pub_key temp_cpabe '%s'",policy);
 	system(cmd);
 
 	// read cipher
@@ -532,7 +532,7 @@ void KeyEx::newFile(int user, char* filePath, int pathSize) {
 }	
 
 
-void KeyEx::downloadFile(int user, char* filePath, int pathSize, int policy) {
+void KeyEx::downloadFile(int user, char* filePath, int pathSize, char *pk) {
 	
 	//send indicator
 	int indicator = DOWNLOAD_KEY;
@@ -563,7 +563,7 @@ void KeyEx::downloadFile(int user, char* filePath, int pathSize, int policy) {
 	free(cipher);
 	// 	dec the cipher with private secret
 	char cmd[MAX_CMD_LENGTH];
-	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk/pk_%d cipher.cpabe",policy);
+	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk/%s cipher.cpabe",pk);
 	system(cmd);
 	// read cipher
 	fp = fopen("cipher","r");
@@ -608,7 +608,7 @@ void KeyEx::downloadFile(int user, char* filePath, int pathSize, int policy) {
 	free(v2);
 }
 
-void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, int oldPolicy, int newPolicy) {
+void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *oldPk, char *newPk, char *policy) {
 	
 	int indicator = KEY_UPDATE;
 	Socket *sock = new Socket(ksip_, ksport_, user);
@@ -639,7 +639,7 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, int oldPo
 	free(cipher);
 	// 	dec the cipher with private secret
 	char cmd[MAX_CMD_LENGTH];
-	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk/pk_%d cipher.cpabe",oldPolicy);
+	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk/%s cipher.cpabe",oldPk);
 	system(cmd);
 	// read cipher
 	fp = fopen("cipher","r");
@@ -694,9 +694,9 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, int oldPo
 	// write policy
 	// load policypolicy
 	// re-encrypt the key state
-	snprintf(cmd, sizeof(cmd), "cpabe-enc keys/pub_key temp_cpabe 'id = %d'",newPolicy);
+	snprintf(cmd, sizeof(cmd), "cpabe-enc keys/pub_key temp_cpabe '%s'",policy);
 	system(cmd);
-	snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/pk/pk_%d keys/pub_key keys/master_key 'id = %d'",newPolicy,newPolicy);
+	snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/pk/%s keys/pub_key keys/master_key '%s'",newPk,policy);
 	system(cmd);
 	// get new cipher size
 	fp = fopen("temp_cpabe.cpabe","r");
@@ -736,8 +736,8 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, int oldPo
 	free(new_cipher);
 }
 
-void KeyEx::cpabeKeygen(int userID){
+void cpabeKeygen(char *pk, char *policy){
 	char cmd[256];
-	snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/pk/pk_%d keys/pub_key keys/master_key 'id = %d'",userID,userID);
+	snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/pk/%s keys/pub_key keys/master_key '%s'",pk,policy);
 	system(cmd);
 }

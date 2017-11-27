@@ -32,7 +32,6 @@ void* Downloader::thread_handler(void* param){
 	int index = 0;
 
 	/* initiate download request */
-	cout<<"download thread started"<<endl;
 	obj->socketArray_[cloudIndex]->initDownload(filename, namesize);	
 		
 	/* start to download data into container */
@@ -225,15 +224,11 @@ int Downloader::downloadStub(char* name, int namesize) {
 
 	int indicator = GETSTUB;
 
-	int flag1 = socketArray_[0]->genericSend((char*)&indicator, sizeof(int));
-	cout<<"flag1 "<<flag1<<endl;
-	int flag2 = socketArray_[0]->genericSend((char*)&namesize, sizeof(int));
-	cout<<"flag2 "<<flag2<<endl;
-	int flag3 = socketArray_[0]->genericSend(name, namesize);
-	cout<<"flag3 "<<flag3<<" "<<namesize<<endl;
+	socketArray_[0]->genericSend((char*)&indicator, sizeof(int));
+	socketArray_[0]->genericSend((char*)&namesize, sizeof(int));
+	socketArray_[0]->genericSend(name, namesize);
 	int length;
 	socketArray_[0]->genericDownload((char*)&length, sizeof(int));
-	cout<<length<<endl;
 	char* stubbuffer = (char*)malloc(sizeof(char)*length);
 	socketArray_[0]->genericDownload(stubbuffer, length);
 
