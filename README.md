@@ -77,7 +77,7 @@ $ cd ../ && rm -rf pbc-0.5.14/
 
 **Step 4:** The libbswabe depends on libglib2.0-dev which can be installed via the following command:
 ```
-sudo apt-get install libglib2.0-dev
+$ sudo apt-get install libglib2.0-dev
 ```
 
 Then, compile our provided libbswabe source to make install.
@@ -145,7 +145,7 @@ $ cd server/ && make
 
 Then, start a REED server by the following command. Here `port_1` and `port_2` direct to the datastore and keystore ports, respectively.  
 ```
-./SERVER [port_1] [port_2]
+$ ./SERVER [port_1] [port_2]
 ```
 
 ### Key Manager
@@ -154,7 +154,7 @@ We have a key manager for key generation. Run the following commands to maintain
 
 ```
 $ cd keymanager/ && make
-./KEYMANAGER [port]
+$ ./KEYMANAGER [port]
 ```
 
 ### Client
@@ -171,87 +171,108 @@ Compile and generate an executable program for client.
 $ cd client/ && make
 ```
 
-## Usage Example
+## Usage Examples
 
-After successful configurations, we can use REED client for a typical command:
-
-```
-useage:
-	upload file: 
-	./CLIENT -u [filename] [policy] [secutiyType]
-    download file: 
-	./CLIENT -d [filename] [privateKeyFileName] [secutiyType]
-	rekeying file: 
-	./CLIENT -r [filename] [oldPrivateKeyFileName] [policy] [secutiyType]
-	keygen: 
-	./CLIENT -k [attribute] [privateKeyFileName]
-
-	 [filename]: full path of the file;
-	 [policy]: like 'id = 1 or id = 2', provide the policy for CA-ABE encrytion;
-	 [attribute]: like 'id = 1', provide the attribute for CA-ABE secret key generation;
-	 [securityType]: [HIGH] AES-256 & SHA-256; [LOW] AES-128 & SHA-1
-	 [privateKeyFileName]: get the private key by keygen function
+After successful configurations, we can use REED client for typical commands:
 
 ```
+// keygen 
+$ ./CLIENT -k [attribute] [private key filename]
+	
+// upload file 
+$ ./CLIENT -u [filename] [policy] [secutiy type]
+    
+// download file 
+$ ./CLIENT -d [filename] [private key filename] [secutiy type]
+	
+// rekeying file 
+$ ./CLIENT -r [filename] [private key filename] [new policy] [secutiy type]
 
-in this version you could type policy by numbers to rekey your file and you can download it with your secret key.
-
-### keyGen Function
-
-You need to run keyGen before start using this system. And your should remember your secret key! 
-
-For example: 
-```
-./CLIENT -k 'id =1' sk_1
-```
-You could get your sk_1 accroding to attribute 'id = 1'.
-
-**This means that you could download the file which upload by policy 'id = 1' or 'id = 2'(incloud your attribute)**
-
-
-
-### Upload Fuction
-
-You need to make sure and remember your policy and secret key name. The secret key name will be asked when you download the file.
-
-For example: 
-```
-./CLIENT -u /home/Documents/main.cc 'id = 1 or id = 2' HIGH
-```
-You can upload "/home/Documents/main.cc" with advanced encryption.
-(This means that with the secret key genertde by 'id = 1' or 'id = 2' could download it)
-
-
-### Download Function
-
-You can start download your file as following example: 
-
-```
-./CLIENT -d /home/Documents/main.cc privateKeyFileName HIGH
+// parameters
+// [filename]: full path of file
+// [policy]: encryption policy of CA-ABE
+// [attribute]: attribute for generating CP-ABE private key
+// [security type]: {HIGH} AES-256 & SHA-256; {LOW} AES-128 & SHA-1
+// [private key filename]: file used to store CP-ABE private key
 ```
 
-you should type in your secret key, then you can get back your file in the same path.
+### Key Generation
 
-**pay attention: you need to use the same securityType when upload file and download it**
-
-### Rekeying Function
-
-You can start rekeying your file as following example: 
+Before using REED, run key generation to generate private keys. To generate an ABE private key for user 1, run the example keygen command:     
 
 ```
-./CLIENT -r /home/Documents/main.cc oldPrivateKeyFileName 'id = 1 or id = 3' HIGH
+$ ./CLIENT -k 'id = 1' sk_1
 ```
 
-After that you could allow the secret key owner of 'id = 1' or 'id =3' could download the file in future.
+You can get the key file `sk_1` in `client/keys/sk/` that stores the private key related to attribute `id = 1`. Note that the attribute is in the form of string (quoted by \' \') and a blank space is necessary before and after =. The format is consistent with the [usage of CP-ABE toolkit](http://acsc.cs.utexas.edu/cpabe/tutorial.html).     
 
-**Pay attention: in this version, you can just us a number as your policy**
 
+### File Upload
+
+Suppose we want to upload a file (say `file`) with a policy that requires only user 1 and user 2 can access the file. Run the following command to use advanced encryption of REED.
+
+```
+$ ./CLIENT -u file 'id = 1 or id = 2' HIGH
+```
+
+When specifying the policy, make sure you own the private key whose attribute satisfies the policy. For example, in the above example, the private key with `id = 1` can decrypt the ciphertext under the policy `id = 1 or id = 2` successfully, but another private key with `id = 3` cannot.   
+
+
+### File Download 
+
+Type the following command to download `file` with the private key `sk_1`: 
+
+```
+$ ./CLIENT -d file sk_1 HIGH
+```
+
+The downloaded file will be renamed to be `file.d` automatically.
+
+Note that, the security type (e.g., `HIGH` in the above example) should be consistent with the pre-defined security type when uploading the file. 
+
+### Rekeying
+
+To update the policy (e.g., `id = 1 or id = 2`) of `file` to a new policy `id = 1 or id = 3`, run the following command. 
+
+```
+$ ./CLIENT -r file sk_1 'id = 1 or id = 3' HIGH
+```
+
+This revokes the access privilege of user 2 and grants user 3 to access `file`. Like file download, the security type should also be consistent with the pre-defined security type when uploading `file`. 
+
+After rekeying, you can generate a new private key (for user 3) and downloads `file` using the key.  
+
+```
+$ ./CLIENT -k 'id = 3' sk_3
+$ ./CLIENT -d file sk_3 HIGH
+```
+
+However, if using the private key of `id = 2`, you cannot decrypt successfully. 
+
+```
+$ ./CLIENT -k 'id = 2' sk_2
+$ ./CLIENT -d file sk_2 HIGH
+
+// outputs
+...
+cannot decrypt, attributes in key do not satisfy policy
+...
+```
+
+
+
+## Limitations 
+
+- We only test REED with a special case of CP-ABE: (i) assign a single attribute with private key and (ii) express policy in access tree with an OR gate connecting all authorized identifiers. It is feasible to extend to generic tree-based access control.   
+
+- Known bugs: 
+	- Possible integrity check failures in downloading some files (the main reason is missing the data chunks in the last container).
 
 ## Maintainers
 
  * Origin maintainer:
 
-	- Chuan QIN, the Chinese University of Hong Kong, chintran27@gmail.com
+	- Chuan Qin, CUHK, chintran27@gmail.com
 
 * Current maintainers:
 
