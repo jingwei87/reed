@@ -60,12 +60,13 @@ void usage() {
 	cout<<setw(4)<<"download file: "<<endl;
 	cout<<setw(6)<<"./CLIENT -d [filename] [privateKeyFileName] [secutiyType]"<<endl;
 	cout<<setw(4)<<"rekeying file: "<<endl;
-	cout<<setw(6)<<"./CLIENT -r [filename] [oldPrivateKeyFileName] [policy] [newPrivateKeyFileName] [secutiyType]"<<endl;
+	cout<<setw(6)<<"./CLIENT -r [filename] [oldPrivateKeyFileName] [policy] [secutiyType]"<<endl;
 	cout<<setw(4)<<"keygen: "<<endl;
-	cout<<setw(6)<<"./CLIENT -k [policy] [privateKeyFileName]"<<endl;
+	cout<<setw(6)<<"./CLIENT -k [attribute] [privateKeyFileName]"<<endl;
 
 	cout<<setw(2)<<"- [filename]: full path of the file;"<<endl;
 	cout<<setw(2)<<"- [policy]: like 'id = 1 or id = 2', provide the policy for CA-ABE encrytion;"<<endl;
+	cout<<setw(2)<<"- [attribute]: like 'id = 1 or id = 2', provide the policy for CA-ABE encrytion;"<<endl;
 	cout<<setw(2)<<"- [securityType]: [HIGH] AES-256 & SHA-256; [LOW] AES-128 & SHA-1"<<endl;
 	cout<<setw(2)<<"- [privateKeyFileName]: get the private key by keygen function"<<endl;
 
@@ -283,7 +284,7 @@ int main(int argc, char *argv[]) {
 		}
 		namesize++;
 		/*cpabe*/
-		char* pk = argv[3];
+		char* sk = argv[3];
 		/* parse secure parameters */
 		char* securesetting = argv[4];
 		int securetype;
@@ -341,7 +342,7 @@ int main(int argc, char *argv[]) {
 		downloaderObj = new Downloader(n,n,0,decoderObj,confObj);
 		downloaderObj->downloadStub(argv[2],namesize);
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
-		keyObj->downloadFile(0, argv[2], namesize,pk);
+		keyObj->downloadFile(0, argv[2], namesize,sk);
 		double timer; //bw;
 		string downloadPath(argv[2]);
 		downloadPath += ".d";
@@ -383,8 +384,7 @@ int main(int argc, char *argv[]) {
 
 	if (strncmp(opt,"-r",2) == 0){
 
-
-		if (argc != 7) {
+		if (argc != 6) {
 			usage();
 		}
 		/* object initialization */
@@ -395,11 +395,10 @@ int main(int argc, char *argv[]) {
 		}
 		namesize++;
 		/*cpabe*/
-		char* oldPk = argv[3];
+		char* oldsk = argv[3];
 		char* policy = argv[4];
-		char *newPk = argv[5];
 		/* parse secure parameters */
-		char* securesetting = argv[6];
+		char* securesetting = argv[5];
 		int securetype;
 		if(strncmp(securesetting,"HIGH", 4) == 0) {
 			securetype = HIGH_SEC_PAIR_TYPE;
@@ -437,13 +436,13 @@ int main(int argc, char *argv[]) {
 		downloaderObj = new Downloader(n,n,0,decoderObj,confObj);
 		downloaderObj->downloadStub(argv[2],namesize);
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
-		keyObj->downloadFile(0, argv[2], namesize,oldPk);
+		keyObj->downloadFile(0, argv[2], namesize,oldsk);
 		uploaderObj = new Uploader(n,n,0,confObj);
 		encoderObj = new Encoder(n, securetype, uploaderObj);
 		
 		keyObj->readKeyFile("./keys/public.pem");
 		
-		keyObj->updateFileByPolicy(0, argv[2], namesize, oldPk,newPk,policy);
+		keyObj->updateFileByPolicy(0, argv[2], namesize, oldsk,policy);
 		uploaderObj->uploadStub(argv[2],namesize);
 		char cmd[256];
 		sprintf(cmd, "rm -rf cipher");
@@ -454,7 +453,7 @@ int main(int argc, char *argv[]) {
 		sprintf(name, "%s.stub", argv[2]);
 		sprintf(cmd, "rm -rf %s",name);
 		system(cmd);		
-		cout << "rekey file over and create the new secert key"
+		cout << "rekey file over and create the new secert key"<<endl;
 	}
 		
 
@@ -464,8 +463,8 @@ int main(int argc, char *argv[]) {
 			usage();
 		}
 		char* policy = argv[2];
-		char *pkName = argv[3];
-		cpabeKeygen(pkName,policy);
+		char *skName = argv[3];
+		cpabeKeygen(skName,policy);
 
 		cout << "keygen over"<<endl;
 	}

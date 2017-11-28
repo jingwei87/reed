@@ -5,7 +5,7 @@ INCLUDES =-I./utils -I./lib/cryptopp -I./comm -I./coding -I./chunking -I./keyCli
 MAIN_OBJS = ./chunking/chunker.o ./utils/CryptoPrimitive.o ./coding/encoder.o ./comm/uploader.o ./utils/socket.o ./comm/downloader.o ./coding/decoder.o ./keyClient/exchange.o ./coding/aont.o ./utils/ssl.o
 
 all: client
-	$(shell ! test -d "keys/pk" && mkdir keys/pk)
+	$(shell ! test -d "keys/sk" && mkdir keys/sk)
 
 %.o: %.cc %.hh
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
@@ -19,4 +19,4 @@ clean:
 	@rm -rf cache.db
 	@rm -rf decoded_copy
 	@rm -rf temp_cpabe.cpabe
-	@rm -rf keys/pk
+	@rm -rf keys/sk

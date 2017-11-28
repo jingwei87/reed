@@ -532,7 +532,7 @@ void KeyEx::newFile(int user, char* filePath, int pathSize, char *policy) {
 }	
 
 
-void KeyEx::downloadFile(int user, char* filePath, int pathSize, char *pk) {
+void KeyEx::downloadFile(int user, char* filePath, int pathSize, char *sk) {
 	
 	//send indicator
 	int indicator = DOWNLOAD_KEY;
@@ -563,7 +563,7 @@ void KeyEx::downloadFile(int user, char* filePath, int pathSize, char *pk) {
 	free(cipher);
 	// 	dec the cipher with private secret
 	char cmd[MAX_CMD_LENGTH];
-	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk/%s cipher.cpabe",pk);
+	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/sk/%s cipher.cpabe",sk);
 	system(cmd);
 	// read cipher
 	fp = fopen("cipher","r");
@@ -608,7 +608,7 @@ void KeyEx::downloadFile(int user, char* filePath, int pathSize, char *pk) {
 	free(v2);
 }
 
-void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *oldPk, char *newPk, char *policy) {
+void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *oldsk, char *policy) {
 	
 	int indicator = KEY_UPDATE;
 	Socket *sock = new Socket(ksip_, ksport_, user);
@@ -639,7 +639,7 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *old
 	free(cipher);
 	// 	dec the cipher with private secret
 	char cmd[MAX_CMD_LENGTH];
-	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/pk/%s cipher.cpabe",oldPk);
+	snprintf(cmd, sizeof(cmd), "cpabe-dec keys/pub_key keys/sk/%s cipher.cpabe",oldsk);
 	system(cmd);
 	// read cipher
 	fp = fopen("cipher","r");
@@ -696,8 +696,8 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *old
 	// re-encrypt the key state
 	snprintf(cmd, sizeof(cmd), "cpabe-enc keys/pub_key temp_cpabe '%s'",policy);
 	system(cmd);
-	snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/pk/%s keys/pub_key keys/master_key '%s'",newPk,policy);
-	system(cmd);
+	// snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/sk/%s keys/pub_key keys/master_key '%s'",oldsk,policy);
+	// system(cmd);
 	// get new cipher size
 	fp = fopen("temp_cpabe.cpabe","r");
 	fseek(fp, 0, SEEK_END);
@@ -736,8 +736,8 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *old
 	free(new_cipher);
 }
 
-void cpabeKeygen(char *pk, char *policy){
+void cpabeKeygen(char *sk, char *policy){
 	char cmd[256];
-	snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/pk/%s keys/pub_key keys/master_key '%s'",pk,policy);
+	snprintf(cmd, sizeof(cmd), "cpabe-keygen -o keys/sk/%s keys/pub_key keys/master_key '%s'",sk,policy);
 	system(cmd);
 }
