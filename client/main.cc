@@ -367,6 +367,8 @@ int main(int argc, char *argv[]) {
 		system(cmd);
 		sprintf(cmd, "rm -rf cipher");
 		system(cmd);
+		sprintf(cmd, "rm -rf cipher.cpabe");
+		system(cmd);
 		sprintf(cmd, "rm -rf temp_cpabe.cpabe");
 		system(cmd);
 		free(buffer);
@@ -447,13 +449,18 @@ int main(int argc, char *argv[]) {
 		char cmd[256];
 		sprintf(cmd, "rm -rf cipher");
 		system(cmd);
+		sprintf(cmd, "rm -rf cipher.cpabe");
+		system(cmd);
 		sprintf(cmd, "rm -rf temp_cpabe.cpabe");
 		system(cmd);
 		char name[256];
 		sprintf(name, "%s.stub", argv[2]);
 		sprintf(cmd, "rm -rf %s",name);
+		system(cmd);
+		sprintf(name, "%s.stub.d", argv[2]);
+		sprintf(cmd, "rm -rf %s",name);
 		system(cmd);		
-		cout << "rekey file over and create the new secert key"<<endl;
+		cout << "rekey file over"<<endl;
 	}
 		
 
