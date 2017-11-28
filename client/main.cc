@@ -66,7 +66,7 @@ void usage() {
 
 	cout<<setw(2)<<"- [filename]: full path of the file;"<<endl;
 	cout<<setw(2)<<"- [policy]: like 'id = 1 or id = 2', provide the policy for CA-ABE encrytion;"<<endl;
-	cout<<setw(2)<<"- [attribute]: like 'id = 1 or id = 2', provide the policy for CA-ABE encrytion;"<<endl;
+	cout<<setw(2)<<"- [attribute]: like 'id = 1', provide the attribute for CA-ABE secret key generation;"<<endl;
 	cout<<setw(2)<<"- [securityType]: [HIGH] AES-256 & SHA-256; [LOW] AES-128 & SHA-1"<<endl;
 	cout<<setw(2)<<"- [privateKeyFileName]: get the private key by keygen function"<<endl;
 

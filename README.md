@@ -176,26 +176,50 @@ $ cd client/ && make
 After successful configurations, we can use REED client for a typical command:
 
 ```
-useage: ./CLIENT {filename} {userID} {action} {securityType}
+useage:
+	upload file: 
+	./CLIENT -u [filename] [policy] [secutiyType]
+    download file: 
+	./CLIENT -d [filename] [privateKeyFileName] [secutiyType]
+	rekeying file: 
+	./CLIENT -r [filename] [oldPrivateKeyFileName] [policy] [secutiyType]
+	keygen: 
+	./CLIENT -k [attribute] [privateKeyFileName]
 
-- {filename}: a full pathname of a upload or download file 
-- {userID}: an identifier of the current client
-- {action}: [-u] for upload or [-d] for download or [-r] for rekeying
-- {securityType}: [HIGH] for advanced encryption scheme combined with AES256 and SHA256 or basic encryption scheme combined with AES128 and SHA1
+	 [filename]: full path of the file;
+	 [policy]: like 'id = 1 or id = 2', provide the policy for CA-ABE encrytion;
+	 [attribute]: like 'id = 1', provide the attribute for CA-ABE secret key generation;
+	 [securityType]: [HIGH] AES-256 & SHA-256; [LOW] AES-128 & SHA-1
+	 [privateKeyFileName]: get the private key by keygen function
+
 ```
 
-in this version you could type policy by numbers to rekey your file and you can download it with your policy, and the userID must be a number too.
+in this version you could type policy by numbers to rekey your file and you can download it with your secret key.
 
-### Upload Fuction
+### keyGen Function
 
-You need to make sure and remember your userID. The userID will be asked when you download the file.
+You need to run keyGen before start using this system. And your should remember your secret key! 
 
 For example: 
 ```
-./CLIENT /home/Documents/main.cc 1 -u HIGH
+./CLIENT -k 'id =1' sk_1
 ```
-You can upload "/home/Documents/main.cc" in userID 1 with advanced encryption.
-(The userID 1 is the initial policy for cpabe-enc)
+You could get your sk_1 accroding to attribute 'id = 1'.
+
+**This means that you could download the file which upload by policy 'id = 1' or 'id = 2'(incloud your attribute)**
+
+
+
+### Upload Fuction
+
+You need to make sure and remember your policy and secret key name. The secret key name will be asked when you download the file.
+
+For example: 
+```
+./CLIENT -u /home/Documents/main.cc 'id = 1 or id = 2' HIGH
+```
+You can upload "/home/Documents/main.cc" with advanced encryption.
+(This means that with the secret key genertde by 'id = 1' or 'id = 2' could download it)
 
 
 ### Download Function
@@ -203,16 +227,10 @@ You can upload "/home/Documents/main.cc" in userID 1 with advanced encryption.
 You can start download your file as following example: 
 
 ```
-./CLIENT /home/Documents/main.cc 1 -d HIGH
+./CLIENT -d /home/Documents/main.cc privateKeyFileName HIGH
 ```
 
-Then, after prompt statement like that: 
-
-```
-if you rekeyed the file, type in new policy, if not type userID again
-```
-
-you should type in your policy (if you rekeyed the file) or your userID (didn't rekeyed).Then you can get back your file in the same path.
+you should type in your secret key, then you can get back your file in the same path.
 
 **pay attention: you need to use the same securityType when upload file and download it**
 
@@ -221,26 +239,13 @@ you should type in your policy (if you rekeyed the file) or your userID (didn't 
 You can start rekeying your file as following example: 
 
 ```
-./CLIENT /home/Documents/main.cc 1 -r HIGH
+./CLIENT -r /home/Documents/main.cc oldPrivateKeyFileName 'id = 1 or id = 3' HIGH
 ```
 
-Then, after prompt statement like that: 
-
-```
-if you rekeyed the file, type in the old policy, if not type userID again
-```
-
-you should type in your old policy (if you rekeyed the file / you're not the first time to rekeying the file) or your userID (didn't rekeyed / you're going to rekeying the file for first time).
-
-After type in your old policy (or userID), you will get the promt statement like that: 
-
-```
-type new policy
-```
-
-In this time, you should type in your new policy to rekeying the file and generate new private cpabe key.
+After that you could allow the secret key owner of 'id = 1' or 'id =3' could download the file in future.
 
 **Pay attention: in this version, you can just us a number as your policy**
+
 
 ## Maintainers
 
