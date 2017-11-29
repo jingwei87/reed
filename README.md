@@ -261,21 +261,20 @@ cannot decrypt, attributes in key do not satisfy policy
 
 
 
-## Limitations 
+## Limitations & Known Bugs 
 
-- We only test REED with a special case of CP-ABE: (i) assign a single attribute with private key and (ii) express policy in access tree with an OR gate connecting all authorized identifiers. It is feasible to extend to generic tree-based access control.   
+- In an ABE cryptosystem, a trusted party (e.g., commonly called attribute authority) maintains an ABE master secret to generate ABE private keys. In REED, we do not implement the authority, and assume all REED clients own the system-wide master secret (that has been generated). Each client can use the secret to generate its private keys (e.g., via the keygen API).   
 
-- Known bugs: 
-	- Possible integrity check failures in downloading some files (the main reason is missing the data chunks in the last container).
+- We implement REED in a special case of CP-ABE: (i) assign a single attribute with private key and (ii) express policy in access tree with an OR gate connecting all authorized identifiers. It is feasible to extend to generic tree-based access control.   
+
+- In our test, REED works on some files (e.g., the vscode deb package that can be downloaded from the official [website](https://code.visualstudio.com)) successfully. For some of the other files, we face integrity check failures in download. The possible reason is missing the data chunks in the last container. 
 
 ## Maintainers
 
- * Origin maintainer:
-
+- Origin maintainer:
 	- Chuan Qin, CUHK, chintran27@gmail.com
 
-* Current maintainers:
-
+- Current maintainers:
     - Yanjing Ren, UESTC, tinoryj@gmail.com
     - Jingang Ma, UESTC, demon64523@gmail.com
 
