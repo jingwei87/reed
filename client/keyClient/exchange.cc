@@ -532,7 +532,7 @@ void KeyEx::newFile(int user, char* filePath, int pathSize, char *policy) {
 }	
 
 
-void KeyEx::downloadFile(int user, char* filePath, int pathSize, char *sk) {
+int KeyEx::downloadFile(int user, char* filePath, int pathSize, char *sk) {
 	
 	//send indicator
 	int indicator = DOWNLOAD_KEY;
@@ -567,6 +567,8 @@ void KeyEx::downloadFile(int user, char* filePath, int pathSize, char *sk) {
 	system(cmd);
 	// read cipher
 	fp = fopen("cipher","r");
+	if(fp == NULL)
+		return -1;
 	fseek(fp, 0, SEEK_END);
 	length = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
@@ -583,7 +585,6 @@ void KeyEx::downloadFile(int user, char* filePath, int pathSize, char *sk) {
 	unsigned char old_key[HASH_SIZE];
 	// compute old key
 	cryptoObj_->generateHash((unsigned char*)seed, HASH_SIZE, old_key);
-
 	char name[256];
 	sprintf(name, "%s.stub.d", filePath);
 	fp = fopen(name, "r");
@@ -606,9 +607,10 @@ void KeyEx::downloadFile(int user, char* filePath, int pathSize, char *sk) {
 	delete(sock);
 	free(v1);
 	free(v2);
+	return 0;
 }
 
-void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *oldsk, char *policy) {
+int KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *oldsk, char *policy) {
 	
 	int indicator = KEY_UPDATE;
 	Socket *sock = new Socket(ksip_, ksport_, user);
@@ -617,7 +619,6 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *old
 	char* filename = (char*)malloc(sizeof(char)*pathSize+sizeof(int));
 	memcpy(filename, &user, 4);
 	memcpy(filename+4, filePath, pathSize);
-
 	char namebuffer[32+4];
 	int hash_length = 32;
 	//	hash file name 
@@ -711,7 +712,7 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *old
 	sock->genericSend(new_cipher, length+4);
 	// update stub
 	char name[256];
-	sprintf(name, "%s.stub", filePath);
+	sprintf(name, "%s.stub.d", filePath);
 	fp = fopen(name, "r");
 	
 	fseek(fp, 0, SEEK_END);
@@ -726,14 +727,15 @@ void KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *old
 	// encrypt new stub
 	cryptoObj_->encryptWithKey(v2, length, new_key, v1);
 	// write new stub
+	sprintf(name, "%s.stub", filePath);
 	fp = fopen(name, "w");
-	
 	fwrite(v1, length, 1, fp);
 	fclose(fp);
 	delete(sock);
 	free(v1);
 	free(v2);
 	free(new_cipher);
+	return 0;
 }
 
 void cpabeKeygen(char *sk, char *policy){

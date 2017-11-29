@@ -242,9 +242,9 @@ class KeyEx{
 			
 		 	note : called when update secrets
 		*/ 
-		void updateFileByPolicy(int user, char* filePath, int pathSize, char *oldPk, char* policy);
+		int updateFileByPolicy(int user, char* filePath, int pathSize, char *oldPk, char* policy);
 
-		void downloadFile(int user, char* filePath, int pathSize, char *pk);
+		int downloadFile(int user, char* filePath, int pathSize, char *pk);
 
 		
 

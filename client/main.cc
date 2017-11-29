@@ -253,7 +253,7 @@ int main(int argc, char *argv[]) {
 		delete encoderObj;
 		inputFile.close();
 		char cmd_1[256];
-		sprintf(cmd_1, "rm -rf %s.stub", argv[1]);
+		sprintf(cmd_1, "rm -rf %s.stub", argv[2]);
 		char cmd_2[256];
 		sprintf(cmd_2, "rm -rf %s.meta", argv[2]);
 		system(cmd_1);
@@ -342,7 +342,18 @@ int main(int argc, char *argv[]) {
 		downloaderObj = new Downloader(n,n,0,decoderObj,confObj);
 		downloaderObj->downloadStub(argv[2],namesize);
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
-		keyObj->downloadFile(0, argv[2], namesize,sk);
+		if((keyObj->downloadFile(0, argv[2], namesize,sk) == -1)){
+			char cmd[256];
+			sprintf(cmd, "rm -rf %s.stub.d", argv[2]);
+			system(cmd);
+			sprintf(cmd, "rm -rf cipher");
+			system(cmd);
+			sprintf(cmd, "rm -rf cipher.cpabe");
+			system(cmd);
+			sprintf(cmd, "rm -rf temp_cpabe.cpabe");
+			system(cmd);
+			exit(1);
+		}
 		double timer; //bw;
 		string downloadPath(argv[2]);
 		downloadPath += ".d";
@@ -438,12 +449,27 @@ int main(int argc, char *argv[]) {
 		downloaderObj = new Downloader(n,n,0,decoderObj,confObj);
 		downloaderObj->downloadStub(argv[2],namesize);
 		keyObj = new KeyEx(encoderObj, securetype, confObj->getkmIP(), confObj->getkmPort(), confObj->getServerConf(0), CHARA_MIN_HASH,VAR_SEG);
-		keyObj->downloadFile(0, argv[2], namesize,oldsk);
+		if((keyObj->downloadFile(0, argv[2], namesize,oldsk)) == -1){
+			char cmd[256];
+			sprintf(cmd, "rm -rf cipher");
+			system(cmd);
+			sprintf(cmd, "rm -rf cipher.cpabe");
+			system(cmd);
+			sprintf(cmd, "rm -rf temp_cpabe.cpabe");
+			system(cmd);
+			char name[256];
+			sprintf(name, "%s.stub", argv[2]);
+			sprintf(cmd, "rm -rf %s",name);
+			system(cmd);
+			sprintf(name, "%s.stub.d", argv[2]);
+			sprintf(cmd, "rm -rf %s",name);
+			system(cmd);
+			exit(0);
+		}
 		uploaderObj = new Uploader(n,n,0,confObj);
 		encoderObj = new Encoder(n, securetype, uploaderObj);
 		
 		keyObj->readKeyFile("./keys/public.pem");
-		
 		keyObj->updateFileByPolicy(0, argv[2], namesize, oldsk,policy);
 		uploaderObj->uploadStub(argv[2],namesize);
 		char cmd[256];
