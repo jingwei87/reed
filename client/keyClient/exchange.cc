@@ -723,13 +723,13 @@ int KeyEx::updateFileByPolicy(int user, char* filePath, int pathSize, char *olds
 	fread(v1, 1, length, fp);
 	fclose(fp);
 	// decrypt old stub
-	cryptoObj_->decryptWithKey(v1, length, old_key, v2);
+	// cryptoObj_->decryptWithKey(v1, length, old_key, v2);
 	// encrypt new stub
-	cryptoObj_->encryptWithKey(v2, length, new_key, v1);
+	cryptoObj_->encryptWithKey(v1, length, new_key, v2);
 	// write new stub
 	sprintf(name, "%s.stub", filePath);
 	fp = fopen(name, "w");
-	fwrite(v1, length, 1, fp);
+	fwrite(v2, length, 1, fp);
 	fclose(fp);
 	delete(sock);
 	free(v1);
