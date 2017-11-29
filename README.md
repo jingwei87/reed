@@ -2,13 +2,7 @@
 
 ## Introduction
 
-REED is an encrypted deduplication storage system with rekeying enabled.
-Specifically, it can replace an existing key with a new key so as to protect
-against key compromise and enable dynamic access control. REED builds on a
-deterministic version of all-or-nothing transform (AONT) for secure and
-lightweight rekeying, while preserving the deduplication capability. It also
-exploits similarity to mitigate key generation overhead. We implement a REED
-prototype with various performance optimization techniques. 
+REED is an encrypted deduplication storage system with rekeying enabled. Specifically, it can replace an existing key with a new key so as to protect against key compromise and enable dynamic access control. REED builds on a deterministic version of all-or-nothing transform (AONT) for secure and lightweight rekeying, while preserving the deduplication capability. It also exploits similarity to mitigate key generation overhead. We implement a REED prototype with various performance optimization techniques. 
 
 ### Publications
 
@@ -72,8 +66,6 @@ $ make
 $ sudo make install
 $ cd ../ && rm -rf pbc-0.5.14/
 ```
-
----
 
 **Step 4:** The libbswabe depends on libglib2.0-dev which can be installed via the following command:
 ```
@@ -173,7 +165,7 @@ $ cd client/ && make
 
 ## Usage Examples
 
-After successful configurations, we can use REED client for typical commands:
+After configuring all entities, we can use REED client for typical commands:
 
 ```
 // keygen 
@@ -204,12 +196,12 @@ Before using REED, run key generation to generate private keys. To generate an A
 $ ./CLIENT -k 'id = 1' sk_1
 ```
 
-You can get the key file `sk_1` in `client/keys/sk/` that stores the private key related to attribute `id = 1`. Note that the attribute is in the form of string (quoted by \' \') and a blank space is necessary before and after =. The format is consistent with the [usage of CP-ABE toolkit](http://acsc.cs.utexas.edu/cpabe/tutorial.html).     
+You can get the key file `sk_1` (located in `client/keys/sk/`) that stores the private key related to attribute `id = 1`. Note that the attribute is in the form of string (quoted by \' \') and a blank space is necessary before and after =. The format is consistent with the [documentation](http://acsc.cs.utexas.edu/cpabe/tutorial.html) of the CP-ABE toolkit.     
 
 
 ### File Upload
 
-Suppose we want to upload a file (say `file`) with a policy that requires only user 1 and user 2 can access the file. Run the following command to use advanced encryption of REED.
+Suppose we want to upload a file (say `file`) with a policy that requires only user 1 or user 2 can access the file. Run the following command to use advanced protection of REED.
 
 ```
 $ ./CLIENT -u file 'id = 1 or id = 2' HIGH
@@ -240,14 +232,14 @@ $ ./CLIENT -r file sk_1 'id = 1 or id = 3' HIGH
 
 This revokes the access privilege of user 2 and grants user 3 to access `file`. Like file download, the security type should also be consistent with the pre-defined security type when uploading `file`. 
 
-After rekeying, you can generate a new private key (for user 3) and downloads `file` using the key.  
+After rekeying, you can generate a new private key (to simulate the action of user 3) and download `file` using the key.  
 
 ```
 $ ./CLIENT -k 'id = 3' sk_3
 $ ./CLIENT -d file sk_3 HIGH
 ```
 
-However, if using the private key of `id = 2`, you cannot decrypt successfully. 
+However, if using the private key of `id = 2`, you cannot decrypt `file` successfully. 
 
 ```
 $ ./CLIENT -k 'id = 2' sk_2
@@ -263,11 +255,14 @@ cannot decrypt, attributes in key do not satisfy policy
 
 ## Limitations & Known Bugs 
 
-- In an ABE cryptosystem, a trusted party (e.g., commonly called attribute authority) maintains an ABE master secret to generate ABE private keys. In REED, we do not implement the authority, and assume all REED clients own the system-wide master secret (that has been generated). Each client can use the secret to generate its private keys (e.g., via the keygen API).   
+- In an ABE cryptosystem, a trusted party (e.g., authority) maintains an ABE master secret to generate ABE private keys. In REED, we do not implement the authority, and assume all REED clients own the system-wide master secret (that has already been generated). Each client can use the secret to generate its private keys (e.g., via the keygen interface).   
 
-- We implement REED in a special case of CP-ABE: (i) assign a single attribute with private key and (ii) express policy in access tree with an OR gate connecting all authorized identifiers. It is feasible to extend to generic tree-based access control.   
+- We test REED with a special case of CP-ABE: (i) assign a single attribute (e.g., id) with private key and (ii) express policy in access tree with an OR gate connecting all authorized identifiers. We cannot guarantee REED works well with generic tree-based access control (that is supported by the CP-ABE toolkit).    
 
-- In our test, REED works on some files (e.g., the vscode deb package that can be downloaded from the official [website](https://code.visualstudio.com)) successfully. For some of the other files, we face integrity check failures in download. The possible reason is missing the data chunks in the last container. 
+- We do not expose interface for lazy revocation (but we implement key regression for policy update). Currently, REED only supports active revocation that immediately revokes the access privileges of old keys.  
+
+- In our test, REED works well with most of files. However, for a few files, we face chunking crashes in upload or integrity check failures (missing the data chunks in the last container) in download. The bugs possibly depend on the content of test files.  
+
 
 ## Maintainers
 
